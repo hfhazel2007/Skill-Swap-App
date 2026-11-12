@@ -1,4 +1,3 @@
-```markdown
 # 🤝 SkillSwap — Peer-to-Peer Skill Exchange Platform
 
 **SkillSwap** is a cross-platform mobile and web application built with **React Native (Expo)** and **Supabase**. It enables students and community peers to trade academic and lifestyle skills using a time-and-coin credit economy, complete with real-time chat, session scheduling, and public class Q&A.
