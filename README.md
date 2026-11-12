@@ -1,12 +1,12 @@
-Here is the updated `README.md` with the screen preview section removed while keeping all the badges, icons, and structured formatting intact:
-
 ```markdown
 # 🤝 SkillSwap — Peer-to-Peer Skill Exchange Platform
 
 **SkillSwap** is a cross-platform mobile and web application built with **React Native (Expo)** and **Supabase**. It enables students and community peers to trade academic and lifestyle skills using a time-and-coin credit economy, complete with real-time chat, session scheduling, and public class Q&A.
 
-[![Expo Web Deploy](https://img.shields.io/badge/Live_Demo-skillswap--demo.expo.app-245748?style=for-the-badge&logo=expo&logoColor=fff)](https://github.com/) 
-[![GitHub license](https://img.shields.io/github/license/username/repo?style=for-the-badge&color=B84E38)](LICENSE)
+[![Expo Web Deploy](https://img.shields.io/badge/Live_Demo-freefish012--myfirstapp--qccpocv8e2.expo.app-245748?style=for-the-badge&logo=expo&logoColor=fff)](https://freefish012-myfirstapp--qccpocv8e2.expo.app/) 
+[![GitHub license](https://img.shields.io/github/license/freefish012/SkillSwap?style=for-the-badge&color=B84E38)](LICENSE)
+
+> 🚀 **Try the Live App:** [https://freefish012-myfirstapp--qccpocv8e2.expo.app/](https://freefish012-myfirstapp--qccpocv8e2.expo.app/)
 
 <p align="center">
   <img src="assets/headerIcon/skillSwap.png" width="220" alt="SkillSwap Logo" />
@@ -31,7 +31,7 @@ Here is the updated `README.md` with the screen preview section removed while ke
 💻 FRONTEND    : React Native (Expo SDK), Expo Router, TypeScript
 🎨 UI & DESIGN : Warm editorial design system (#FDF6EC, #214E41, #F05A28), Ticket-stub layouts
 🗄️ BACKEND     : Supabase (PostgreSQL Database, Realtime Subscriptions, Authentication)
-🚀 DEPLOYMENT  : Expo Web Static Export hosted on Vercel / Netlify
+🚀 DEPLOYMENT  : Expo Web Static Export hosted on EAS Hosting
 
 ```
 
@@ -65,7 +65,7 @@ Here is the updated `README.md` with the screen preview section removed while ke
 
 1. **Clone the repository:**
 ```bash
-git clone [https://github.com/](https://github.com/)<your-username>/<your-repo-name>.git
+git clone [https://github.com/freefish012/](https://github.com/freefish012/)<your-repo-name>.git
 cd <your-repo-name>
 
 ```
@@ -109,7 +109,7 @@ npx expo start --web
 
 ## 📦 Building for Web Deployment
 
-To generate a production-ready static web bundle for Vercel, Netlify, or EAS Hosting:
+To generate a production-ready static web bundle for EAS Hosting, Vercel, or Netlify:
 
 ```bash
 npx expo export --platform web
