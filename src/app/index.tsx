@@ -1,98 +1,370 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import {
+  ActivityIndicator,
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { supabase } from '../lib/supabase';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+export default function LoginScreen() {
+  // Initialize router and state variables for email, password, visibility, pending actions, and messages
+  const router = useRouter();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);//set it to the inital state which is not letting the password to be visible
+  const [pendingAction, setPendingAction] = useState<'sign-in'  | null>(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
+  // Function to handle user sign-in
+  const signIn = async () => {
+  setErrorMessage('');
+  setInfoMessage('');
+
+  //trim the email and convert it to lowercase for consistency
+  const trimmedEmail = email.trim().toLowerCase();
+
+
+  // Validate that both email and password are provided
+  if (!trimmedEmail || !password) {
+    setErrorMessage('Enter your email and password to continue.');
+    return;
   }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
+  
+  setPendingAction('sign-in');
+  try {
+    //fetching data from the 'users' table in Supabase where the email matches the trimmed email
+    const { data: user, error } = await supabase //allows the to query the 'users' table in Supabase for a user with the provided email
+      .from('users')
+      .select('*')
+      .eq('email', trimmedEmail)
+      .maybeSingle();//expecting either a single user object or null if no match is found
+
+    //if there's an error or no user is found, display an error message
+    if (error || !user) {
+      setErrorMessage('Invalid email or password.');
+      return;
+    }
+
+    // 2. Check stored password_hash against user input
+    if (user.password_hash !== password) {
+      setErrorMessage('Invalid email or password.');
+      return;
+    }
+
+    // 3. Login successful!
+    router.replace({
+    pathname: '/home',//redirects the user to the home page after successful login
+    params: { userId: user.id },//record the user id 
+});
+  //error handling
+  } catch (err) {
+    setErrorMessage('Unable to sign in right now. Check your connection and try again.');
+  } finally {
+    setPendingAction(null);
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+};
+  const isPending = pendingAction !== null;
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+
+          <View style={styles.content}>
+            {/*header login page*/}
+            <View style={styles.brand}>
+              <Image
+                source={require('../../assets/headerIcon/skillSwap.png')}
+                style={styles.logo}
+                resizeMode="contain"
+                accessibilityLabel="SkillSwap"
+              />
+              <Text style={styles.brandCaption}>A COMMUNITY THAT LEARNS TOGETHER</Text>
+            </View>
+
+            <View style={styles.card}>
+              {/* Login form with email and password fields, sign-in button, and guest access option */}
+              <Text style={styles.eyebrow}>YOUR NEXT SKILL STARTS HERE</Text>
+              <Text style={styles.title}>Welcome back</Text>
+              <Text style={styles.subtitle}>Sign in to pick up where you left off.</Text>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Email address</Text>
+                {/* email input field with validation and accessibility features */}
+                <TextInput
+                  value={email}
+                  onChangeText={setEmail}
+                  style={styles.input}
+                  placeholder="you@example.com"
+                  placeholderTextColor="#A5A3B2"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  textContentType="emailAddress"
+                  accessibilityLabel="Email address"
+                  returnKeyType="next"
+                />
+              </View>
+
+              <View style={styles.field}>
+                <View style={styles.passwordLabelRow}>
+                  <Text style={styles.label}>Password</Text>
+                  {/* set the password to hide or show */}
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel={passwordVisible ? 'Hide password' : 'Show password'}
+                    onPress={() => setPasswordVisible((visible) => !visible)}
+                    disabled={isPending}
+                  >
+                    <Text style={styles.showPassword}>{passwordVisible ? 'Hide' : 'Show'}</Text>
+                  </TouchableOpacity>
+                </View>
+                {/* password input field with validation and accessibility features */}
+                <TextInput
+                  value={password}
+                  onChangeText={setPassword}
+                  style={styles.input}
+                  placeholder="Enter your password"
+                  placeholderTextColor="#A5A3B2"
+                  secureTextEntry={!passwordVisible}
+                  autoCapitalize="none"
+                  autoComplete="current-password"
+                  textContentType="password"
+                  accessibilityLabel="Password"
+                  returnKeyType="go"
+                  onSubmitEditing={signIn}
+                />
+              </View>
+
+
+              {errorMessage ? (
+                <Text accessibilityRole="alert" style={styles.errorMessage}>
+                  {errorMessage}
+                </Text>
+              ) : null}
+              {infoMessage ? (
+                <Text accessibilityLiveRegion="polite" style={styles.infoMessage}>
+                  {infoMessage}
+                </Text>
+              ) : null}
+            {/* sign in button */}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Sign in"
+                onPress={signIn}
+                disabled={isPending}
+                style={[styles.signInButton, isPending && styles.disabledButton]}
+              >
+                {pendingAction === 'sign-in' ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.signInText}>Sign in</Text>
+                )}
+              </TouchableOpacity>
+              {/*Register button */}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel="Register for SkillSwap"
+                onPress={() => router.push('/register')}// navigates to the registration page and adds to the browser history stack 
+                disabled={isPending}
+                style={styles.registerButton}
+              >
+                <Text style={styles.registerText}>Create an account</Text>
+              </TouchableOpacity>
+            </View>
+            {/* allow user to explore the app as a guest without signing in */}
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>Just looking around?</Text>
+              <TouchableOpacity
+                accessibilityRole="button"
+                onPress={() => router.replace('/home')}//navigates to home page without adding a new entry
+                disabled={isPending}
+                style={styles.guestButton}
+              >
+                <Text style={styles.guestText}>Explore as a guest</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
-
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
-  );
-}
-
+//styles for the login page
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
   safeArea: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    backgroundColor: '#F5F1E8',
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
+  keyboardView: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+    paddingVertical: 32,
+  },
+  content: {
+    width: '100%',
+    maxWidth: 440,
+    alignSelf: 'center',
+  },
+  brand: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  logo: {
+    width: 176,
+    height: 80,
+  },
+  brandCaption: {
+    marginTop: 2,
+    color: '#C45A42',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.8,
+  },
+  card: {
+    padding: 24,
+    backgroundColor: '#FFFCF6',
+    borderWidth: 1,
+    borderColor: '#EAE3D8',
+    borderRadius: 22,
+  },
+  eyebrow: {
+    color: '#C45A42',
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.2,
   },
   title: {
-    textAlign: 'center',
+    marginTop: 8,
+    color: '#203A33',
+    fontSize: 30,
+    fontWeight: '800',
   },
-  code: {
-    textTransform: 'uppercase',
+  subtitle: {
+    marginTop: 6,
+    marginBottom: 24,
+    color: '#70776F',
+    fontSize: 14,
+    lineHeight: 20,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+  field: {
+    marginBottom: 17,
+  },
+  label: {
+    marginBottom: 8,
+    color: '#29483F',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  input: {
+    minHeight: 52,
+    paddingHorizontal: 14,
+    color: '#203A33',
+    fontSize: 15,
+    borderWidth: 1,
+    borderColor: '#DDD6CA',
+    borderRadius: 12,
+    backgroundColor: '#FBF8F1',
+  },
+  passwordLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  showPassword: {
+    marginBottom: 8,
+    color: '#245748',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  forgotButton: {
+    alignSelf: 'flex-end',
+    paddingVertical: 3,
+    marginTop: -6,
+    marginBottom: 16,
+  },
+  forgotText: {
+    color: '#245748',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  errorMessage: {
+    marginBottom: 14,
+    color: '#B4233A',
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  infoMessage: {
+    marginBottom: 14,
+    color: '#456B59',
+    fontSize: 13,
+    lineHeight: 19,
+  },
+  signInButton: {
+    minHeight: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E76F51',
+    borderRadius: 12,
+  },
+  disabledButton: {
+    opacity: 0.7,
+  },
+  signInText: {
+    color: '#FFFFFF',
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  footer: {
+    alignItems: 'center',
+    marginTop: 22,
+  },
+  footerText: {
+    color: '#70776F',
+    fontSize: 13,
+  },
+  guestButton: {
+    padding: 8,
+  },
+  guestText: {
+    color: '#245748',
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  registerButton: {
+    minHeight: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: '#245748',
+    borderRadius: 12,
+  },
+  registerText: {
+    color: '#245748',
+    fontSize: 14,
+    fontWeight: '800',
   },
 });
