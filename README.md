@@ -53,22 +53,27 @@ You can sign in with any of the following pre-configured demo accounts:
    ```bash
    npm install
 
-```
 
-2. **Configure environment variables:**
-Ensure your Supabase project URL and anonymous key are configured in `src/lib/supabase.ts` (or `.env`).
-3. **Start the development server:**
+
+2. **Start the app**
 ```bash
 npx expo start
 
 ```
 
 
-* Press `w` to open in a web browser, or scan the QR code using the **Expo Go (SDK 58)** app on iOS/Android.
+In the output, you'll find options to open the app in a:
 
+* [Development build](https://docs.expo.dev/develop/development-builds/introduction/)
+* [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
+* [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
+* [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
 
-4. **Build and deploy for web:**
-```bash
-npx expo export --platform web
-npx eas-cli deploy --prod
+You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+
+## Project Structure
+
+* `src/app/` — File-based screens (`index.tsx`, `home.tsx`, `explore.tsx`, `post.tsx`, `detail_post.tsx`, `lecture_profile.tsx`, `messages.tsx`, `session.tsx`, `profile.tsx`, `navbar.tsx`)
+* `src/context/` — Authentication state management (`auth_context.tsx`)
+* `src/lib/` — Supabase client configuration (`supabase.ts`)
 
